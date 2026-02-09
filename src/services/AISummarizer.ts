@@ -22,7 +22,7 @@ export class AISummarizer {
     return this.apiKey.length > 0;
   }
 
-  private async callGemini(prompt: string): Promise<string> {
+  private async callGemini(prompt: string, retries = 2): Promise<string> {
     const url = `${GEMINI_API_URL}?key=${this.apiKey}`;
 
     const response = await fetch(url, {
@@ -36,6 +36,11 @@ export class AISummarizer {
         },
       }),
     });
+
+    if (response.status === 429 && retries > 0) {
+      await new Promise((r) => setTimeout(r, 2000 * (3 - retries)));
+      return this.callGemini(prompt, retries - 1);
+    }
 
     const data = (await response.json()) as GeminiResponse;
 

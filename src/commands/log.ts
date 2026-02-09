@@ -11,6 +11,12 @@ export async function logCommand(message: string, options: { tool?: string; prom
     process.exit(1);
   }
 
+  if (!message || !message.trim()) {
+    console.log(chalk.red('❌ Log message cannot be empty.'));
+    console.log(chalk.gray('   Usage: vibe log "your build message"'));
+    process.exit(1);
+  }
+
   const spinner = ora('Processing log entry...').start();
 
   try {

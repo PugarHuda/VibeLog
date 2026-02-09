@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Auto-generate verified AI build logs for hackathons with onchain proof",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "vibe": "./dist/index.js",
     "vibelog": "./dist/index.js"
@@ -10,9 +11,6 @@
   "type": "module",
   "files": [
     "dist",
-    "contracts",
-    "docs",
-    "examples",
     "README.md"
   ],
   "scripts": {
@@ -35,7 +33,16 @@
     "documentation",
     "cli"
   ],
+  "author": "PugarHuda",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PugarHuda/VibeLog.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PugarHuda/VibeLog/issues"
+  },
+  "homepage": "https://pugarhuda.github.io/VibeLog/",
   "dependencies": {
     "chalk": "^5.3.0",
     "commander": "^11.1.0",

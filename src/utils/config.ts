@@ -31,7 +31,11 @@ export function loadConfig(): Config {
     throw new Error('VibeLog not initialized. Run `vibe init` first.');
   }
   const raw = readFileSync(configPath, 'utf-8');
-  return JSON.parse(raw) as Config;
+  try {
+    return JSON.parse(raw) as Config;
+  } catch {
+    throw new Error('Config file is corrupted. Delete .vibelog/config.json and run `vibe init` again.');
+  }
 }
 
 export function saveConfig(config: Config): void {

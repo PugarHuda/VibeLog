@@ -471,13 +471,24 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (max-width: 600px) {
-    .hero-ascii { font-size: 0.4rem; }
-    .hero h1 { font-size: 1.2rem; }
+    .hero-ascii { font-size: 0.35rem; }
+    .hero h1 { font-size: 1.1rem; }
+    .hero p { font-size: 0.78rem; }
     .flow { flex-direction: column; }
     .flow-arrow { transform: rotate(90deg); }
     .privacy-box { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     th, td { padding: 0.5rem 0.7rem; font-size: 0.65rem; }
+    .terminal-body { font-size: 0.6rem; min-height: 280px; padding: 0.75rem; }
+    .feature-grid { grid-template-columns: 1fr; }
+    nav .links { gap: 0.8rem; }
+    nav a { font-size: 0.7rem; }
+    .search-box { padding: 1rem; }
+    input[type="text"] { font-size: 0.75rem; }
+    .demo-tabs { padding: 0 0.5rem; }
+    .demo-tab { padding: 0.4rem 0.7rem; font-size: 0.65rem; }
+    .checkpoint-table { overflow-x: auto; }
+    table { min-width: 500px; }
   }
 </style>
 </head>
@@ -797,16 +808,35 @@ showDemo('workflow');
 // ---- VERIFIER ----
 const NETWORKS = {
   testnet: {
-    rpcUrl: 'https://data-seed-prebsc-1-s1.bnbchain.org:8545',
+    rpcUrls: [
+      'https://data-seed-prebsc-1-s1.bnbchain.org:8545',
+      'https://data-seed-prebsc-2-s1.bnbchain.org:8545',
+      'https://data-seed-prebsc-1-s2.bnbchain.org:8545',
+    ],
     explorerUrl: 'https://testnet.bscscan.com',
     name: 'BSC Testnet',
   },
   mainnet: {
-    rpcUrl: 'https://bsc-dataseed.binance.org',
+    rpcUrls: [
+      'https://bsc-dataseed.binance.org',
+      'https://bsc-dataseed1.defibit.io',
+      'https://bsc-dataseed1.ninicoin.io',
+    ],
     explorerUrl: 'https://bscscan.com',
     name: 'BSC Mainnet',
   },
 };
+
+async function getProvider(net) {
+  for (const url of net.rpcUrls) {
+    try {
+      const p = new ethers.JsonRpcProvider(url);
+      await p.getBlockNumber();
+      return p;
+    } catch { /* try next */ }
+  }
+  throw new Error('All RPC endpoints unavailable. Try again later.');
+}
 
 const ABI = [
   "function getCheckpointCount(address builder) external view returns (uint256)",
@@ -870,7 +900,7 @@ async function verify() {
 
   try {
     const net = NETWORKS[selectedNetwork];
-    const provider = new ethers.JsonRpcProvider(net.rpcUrl);
+    const provider = await getProvider(net);
     const contract = new ethers.Contract(customContract, ABI, provider);
 
     showStatus('<span class="spinner"></span> Reading checkpoints...');
@@ -892,19 +922,23 @@ async function verify() {
 
     showStatus('<span class="spinner"></span> Loading ' + count + ' checkpoints...');
 
-    const checkpoints = [];
+    // Load all checkpoints in parallel
+    const promises = [];
     for (let i = 0; i < count; i++) {
-      const cp = await contract.getCheckpoint(address, i);
-      checkpoints.push({
-        index: i + 1,
-        logHash: cp.logHash,
-        summary: cp.summary,
-        timestamp: Number(cp.timestamp),
-        sessionCount: Number(cp.sessionCount),
-      });
+      promises.push(
+        contract.getCheckpoint(address, i).then(cp => ({
+          index: i + 1,
+          logHash: cp.logHash,
+          summary: cp.summary,
+          timestamp: Number(cp.timestamp),
+          sessionCount: Number(cp.sessionCount),
+        })).catch(() => null)
+      );
     }
+    const results = await Promise.all(promises);
+    const checkpoints = results.filter(Boolean);
 
-    document.getElementById('totalCheckpoints').textContent = count;
+    document.getElementById('totalCheckpoints').textContent = checkpoints.length;
     document.getElementById('totalSessions').textContent =
       checkpoints.length > 0 ? checkpoints[checkpoints.length - 1].sessionCount : 0;
     document.getElementById('firstDate').textContent = formatDate(checkpoints[0].timestamp);

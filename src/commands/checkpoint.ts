@@ -7,7 +7,7 @@ import { LogManager } from '../services/LogManager.js';
 import { BlockchainService } from '../services/BlockchainService.js';
 import { NETWORKS } from '../types/index.js';
 
-export async function checkpointCommand(summary: string): Promise<void> {
+export async function checkpointCommand(summary: string, options?: { dryRun?: boolean }): Promise<void> {
   if (!isInitialized()) {
     console.log(chalk.red('❌ VibeLog not initialized. Run `vibe init` first.'));
     process.exit(1);
@@ -68,6 +68,27 @@ export async function checkpointCommand(summary: string): Promise<void> {
   console.log(chalk.yellow(`\n⚠️  Privacy check:`));
   console.log(chalk.gray(`   Summary (will be PUBLIC): "${sanitized}"`));
   console.log(chalk.gray('   This summary will be stored onchain permanently.'));
+
+  // Dry-run mode: estimate gas and exit
+  if (options?.dryRun) {
+    const spinner = ora('Estimating gas...').start();
+    try {
+      const blockchain = new BlockchainService();
+      const gasEstimate = await blockchain.estimateGas(sanitized, logHash);
+      const balance = await blockchain.getBalance();
+      spinner.succeed('Gas estimation complete');
+      console.log(chalk.cyan('\n📊 Dry-run results:'));
+      console.log(chalk.gray(`   Gas estimate: ~${gasEstimate.toString()} units`));
+      console.log(chalk.gray(`   Est. cost: ~$${(Number(gasEstimate) * 3e-9 * 300).toFixed(6)}`));
+      console.log(chalk.gray(`   Wallet balance: ${parseFloat(balance).toFixed(6)} BNB`));
+      console.log(chalk.green('\n✅ Ready to submit. Run without --dry-run to proceed.'));
+    } catch (error: unknown) {
+      spinner.fail('Gas estimation failed');
+      const msg = error instanceof Error ? error.message : String(error);
+      console.log(chalk.red(`   Error: ${msg}`));
+    }
+    return;
+  }
 
   const { proceed } = await inquirer.prompt([
     {

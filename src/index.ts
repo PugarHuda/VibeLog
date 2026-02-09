@@ -40,8 +40,9 @@ program
 program
   .command('checkpoint <summary>')
   .description('Create an onchain checkpoint')
-  .action(async (summary: string) => {
-    await checkpointCommand(summary);
+  .option('--dry-run', 'Estimate gas cost without submitting')
+  .action(async (summary: string, options: { dryRun?: boolean }) => {
+    await checkpointCommand(summary, options);
   });
 
 program

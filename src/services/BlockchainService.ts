@@ -53,6 +53,10 @@ export class BlockchainService {
     const tx = await this.contract.attestVibe(summary, hashBytes);
     const receipt = await tx.wait();
 
+    if (!receipt) {
+      throw new Error('Transaction was not confirmed. It may have been dropped or replaced.');
+    }
+
     const gasPrice = receipt.gasPrice || BigInt(1000000008);
     const cost = ethers.formatEther(receipt.gasUsed * gasPrice);
 
