@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VibeLog - Verified AI Build Logs on BNB Chain</title>
-<meta name="description" content="Auto-generate verified AI build logs with onchain proof. Track hackathon builds, create tamper-proof checkpoints on BSC.">
+<meta name="description" content="Auto-generate verified AI build logs with onchain proof. Track builds, create tamper-proof checkpoints on BSC.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0f'/%3E%3Crect x='4' y='4' width='24' height='24' rx='2' fill='%23f0b90b' opacity='0.15'/%3E%3Cpath d='M8 8h4v4h-4zM20 8h4v4h-4zM10 12h4v4h-4zM18 12h4v4h-4zM12 16h4v4h-4zM16 16h4v4h-4zM14 20h4v4h-4z' fill='%23f0b90b'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
 <link href="https://unpkg.com/nes.css@2.3.1/css/nes.min.css" rel="stylesheet">
 <style>
@@ -24,28 +25,31 @@
     --blue: #60a5fa;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
-  /* NES.css dark mode overrides */
+  /* NES.css dark overrides */
   .nes-container.is-dark { background: var(--surface); border-color: var(--text-dim); }
   .nes-container.is-dark.with-title > .title { background-color: var(--bg); color: var(--bnb-yellow); font-family: 'Press Start 2P', cursive; font-size: 0.7rem; }
-  .nes-btn { font-family: 'Press Start 2P', cursive; font-size: 0.65rem; }
+  .nes-btn { font-family: 'Press Start 2P', cursive; font-size: 0.65rem; transition: transform 0.1s; }
+  .nes-btn:active { transform: scale(0.97); }
   .nes-btn.is-warning { background-color: var(--bnb-yellow); color: #000; }
   .nes-btn.is-warning::after { box-shadow: inset -4px -4px var(--bnb-gold); }
   .nes-btn.is-dark { background-color: var(--surface); color: var(--text); }
   .nes-btn.is-dark::after { box-shadow: inset -4px -4px var(--border); }
-  .nes-field .nes-input { background: var(--bg); color: var(--text); border-color: var(--text-dim); font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace; font-size: 0.8rem; }
+  .nes-field .nes-input { background: var(--bg); color: var(--text); border-color: var(--text-dim); font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace; }
   .nes-field .nes-input:focus { border-color: var(--bnb-yellow); outline: none; }
   .nes-field .nes-input::placeholder { color: var(--text-dim); opacity: 0.5; }
-  .nes-field > label { color: var(--text-dim) !important; font-family: 'Press Start 2P', cursive; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; }
+  .nes-field > label { color: var(--text-dim) !important; font-family: 'Press Start 2P', cursive; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; }
   .nes-table { font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace; font-size: 0.75rem; }
   .nes-table.is-bordered.is-dark { border-color: var(--border); }
-  .nes-table.is-bordered.is-dark th { background: var(--surface2); color: var(--text-dim); border-color: var(--border); }
+  .nes-table.is-bordered.is-dark th { background: var(--surface2); color: var(--text-dim); border-color: var(--border); font-size: 0.7rem; }
   .nes-table.is-bordered.is-dark td { border-color: var(--border); color: var(--text); background: var(--surface); }
   .nes-table.is-bordered.is-dark tr:hover td { background: rgba(240, 185, 11, 0.05); }
 
@@ -53,31 +57,61 @@
   .pixel-heading {
     font-family: 'Press Start 2P', cursive;
     color: var(--bnb-yellow);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     letter-spacing: 1px;
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .section-subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+  }
+
+  /* section divider */
+  .section-divider {
+    text-align: center;
+    color: var(--border);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.5rem;
+    padding: 1.5rem 0;
+    letter-spacing: 4px;
+    user-select: none;
   }
 
   /* ---- NAV ---- */
   nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 10, 15, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 2px solid var(--border);
+  }
+  nav .nav-inner {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 1000px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 1.25rem 1rem;
+    padding: 1rem 1.25rem;
   }
-  nav .brand { color: var(--bnb-yellow); font-family: 'Press Start 2P', cursive; font-size: 0.8rem; letter-spacing: 1px; display: flex; align-items: center; gap: 0.5rem; }
-  nav .links { display: flex; gap: 1.5rem; }
-  nav a { color: var(--text-dim); text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
-  nav a:hover { color: var(--bnb-yellow); }
+  nav .brand { color: var(--bnb-yellow); font-family: 'Press Start 2P', cursive; font-size: 0.75rem; letter-spacing: 1px; display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+  nav .brand:hover { text-decoration: none; }
+  nav .links { display: flex; gap: 1.5rem; align-items: center; }
+  nav a { color: var(--text-dim); text-decoration: none; font-size: 0.78rem; transition: color 0.2s; }
+  nav a:hover { color: var(--bnb-yellow); text-decoration: none; }
+  nav .github-link { display: flex; align-items: center; gap: 0.3rem; }
+  nav .github-link svg { width: 16px; height: 16px; fill: currentColor; }
 
   /* ---- HERO ---- */
   .hero {
     text-align: center;
-    padding: 3rem 1rem 2rem;
-    max-width: 700px;
+    padding: 4rem 1.25rem 2.5rem;
+    max-width: 750px;
     margin: 0 auto;
   }
   .hero-ascii {
@@ -86,52 +120,49 @@
     font-size: 0.55rem;
     line-height: 1.15;
     white-space: pre;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 20px rgba(240, 185, 11, 0.3);
   }
   .hero h1 {
     font-family: 'Press Start 2P', cursive;
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 700;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
     color: var(--text);
-    line-height: 1.8;
+    line-height: 2;
   }
   .hero h1 span { color: var(--bnb-yellow); }
   .hero p {
     color: var(--text-dim);
-    font-size: 0.85rem;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
   }
-  .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
   .install-cmd {
     display: inline-block;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0;
-    padding: 0.6rem 1.2rem;
+    border: 2px solid var(--border);
+    padding: 0.65rem 1.4rem;
     font-size: 0.85rem;
     color: var(--green);
-    margin-top: 1rem;
     cursor: pointer;
-    transition: border-color 0.2s;
-    image-rendering: pixelated;
+    transition: all 0.2s;
   }
-  .install-cmd:hover { border-color: var(--bnb-yellow); }
+  .install-cmd:hover { border-color: var(--bnb-yellow); background: var(--surface2); }
   .install-cmd::before { content: '$ '; color: var(--text-dim); }
 
   /* ---- TERMINAL DEMO ---- */
   .demo-section {
-    max-width: 750px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
   }
   .terminal {
     background: #0d1117;
-    border: 1px solid #21262d;
-    border-radius: 0;
+    border: 2px solid #21262d;
     overflow: hidden;
-    image-rendering: pixelated;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   }
   .terminal-bar {
     display: flex;
@@ -141,32 +172,19 @@
     background: #161b22;
     border-bottom: 1px solid #21262d;
   }
-  .terminal-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-  }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
   .terminal-dot.r { background: #ff5f57; }
   .terminal-dot.y { background: #febc2e; }
   .terminal-dot.g { background: #28c840; }
-  .terminal-title {
-    flex: 1;
-    text-align: center;
-    color: var(--text-dim);
-    font-size: 0.7rem;
-  }
+  .terminal-title { flex: 1; text-align: center; color: var(--text-dim); font-size: 0.7rem; }
   .terminal-body {
-    padding: 1rem 1.25rem;
-    font-size: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    font-size: 0.78rem;
     line-height: 1.65;
-    min-height: 340px;
+    min-height: 360px;
     position: relative;
   }
-  .term-line {
-    opacity: 0;
-    animation: fadeIn 0.3s ease forwards;
-    white-space: pre-wrap;
-    word-break: break-all;
-  }
+  .term-line { opacity: 0; animation: fadeIn 0.3s ease forwards; white-space: pre-wrap; word-break: break-all; }
   .term-prompt { color: var(--green); }
   .term-cmd { color: #fff; font-weight: bold; }
   .term-yellow { color: var(--bnb-yellow); }
@@ -178,84 +196,82 @@
   .term-bold { font-weight: bold; color: #fff; }
   .term-accent { color: var(--accent); }
   @keyframes fadeIn { to { opacity: 1; } }
-  .demo-tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    padding: 0;
-  }
-  .demo-tab {
-    font-size: 0.55rem;
-    padding: 0.4rem 0.8rem;
-  }
+  .demo-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .demo-tab { font-size: 0.55rem; padding: 0.4rem 0.8rem; }
 
   /* ---- FEATURES ---- */
   .features {
-    max-width: 900px;
-    margin: 3rem auto;
-    padding: 0 1rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
   }
   .feature-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.25rem;
   }
-  .feature-card.nes-container { padding: 1.25rem; }
+  .feature-card.nes-container {
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .feature-card.nes-container:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px rgba(240, 185, 11, 0.08);
+  }
   .feature-card h3 {
     font-family: 'Press Start 2P', cursive;
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     color: var(--text);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
     margin-top: 0.25rem;
+    line-height: 1.6;
   }
   .feature-card p {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     color: var(--text-dim);
-    line-height: 1.5;
+    line-height: 1.6;
   }
-  .feature-icon { font-size: 1.2rem; margin-bottom: 0.5rem; }
+  .feature-icon { font-size: 1.3rem; margin-bottom: 0.5rem; }
 
   /* ---- HOW IT WORKS ---- */
   .how-it-works {
-    max-width: 750px;
-    margin: 3rem auto;
-    padding: 0 1rem;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
   }
   .flow {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
   }
   .flow-step.nes-container {
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1.1rem;
     text-align: center;
-    min-width: 100px;
+    min-width: 105px;
+    transition: transform 0.2s;
   }
-  .flow-step .step-icon { font-size: 1.3rem; margin-bottom: 0.25rem; }
+  .flow-step.nes-container:hover { transform: translateY(-2px); }
+  .flow-step .step-icon { font-size: 1.4rem; margin-bottom: 0.3rem; }
   .flow-step .step-label { font-size: 0.7rem; color: var(--text-dim); }
-  .flow-arrow { color: var(--bnb-yellow); font-family: 'Press Start 2P', cursive; font-size: 0.8rem; }
+  .flow-arrow { color: var(--bnb-yellow); font-family: 'Press Start 2P', cursive; font-size: 0.75rem; }
   .privacy-col h4 {
     font-family: 'Press Start 2P', cursive;
     font-size: 0.55rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 1px;
   }
   .privacy-col.onchain h4 { color: var(--bnb-yellow); }
   .privacy-col.local h4 { color: var(--green); }
-  .privacy-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
+  .privacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
   .privacy-col ul {
     list-style: none;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     color: var(--text-dim);
-    line-height: 1.8;
+    line-height: 1.9;
   }
   .privacy-col ul li::before { content: '  '; }
   .privacy-col.onchain ul li::before { content: '> '; color: var(--bnb-yellow); }
@@ -263,59 +279,75 @@
 
   /* ---- SAMPLE REPORT ---- */
   .sample-section {
-    max-width: 900px;
-    margin: 3rem auto;
-    padding: 0 1rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
   }
   .sample-preview {
-    max-height: 420px;
+    max-height: 450px;
     overflow-y: auto;
     background: var(--bg);
-    padding: 1.25rem;
-    font-size: 0.75rem;
-    line-height: 1.6;
+    padding: 1.5rem;
+    font-size: 0.78rem;
+    line-height: 1.65;
     color: var(--text-dim);
     border: 2px solid var(--border);
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
   }
   .sample-preview h1, .sample-preview h2, .sample-preview h3 { color: var(--bnb-yellow); margin: 0.75rem 0 0.5rem; }
   .sample-preview h1 { font-size: 1rem; }
-  .sample-preview h2 { font-size: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
-  .sample-preview h3 { font-size: 0.78rem; color: var(--text); }
+  .sample-preview h2 { font-size: 0.88rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  .sample-preview h3 { font-size: 0.8rem; color: var(--text); }
   .sample-preview p { margin: 0.4rem 0; }
   .sample-preview strong { color: var(--text); }
-  .sample-preview code { background: var(--surface2); color: var(--cyan); padding: 0.1rem 0.3rem; font-size: 0.7rem; }
-  .sample-preview blockquote { border-left: 3px solid var(--bnb-yellow); padding-left: 0.75rem; color: var(--text-dim); font-style: italic; margin: 0.5rem 0; }
-  .sample-preview table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.7rem; }
-  .sample-preview th { background: var(--surface2); color: var(--text-dim); text-align: left; padding: 0.4rem 0.6rem; border: 1px solid var(--border); }
-  .sample-preview td { padding: 0.4rem 0.6rem; border: 1px solid var(--border); }
+  .sample-preview code { background: var(--surface2); color: var(--cyan); padding: 0.1rem 0.35rem; font-size: 0.72rem; }
+  .sample-preview blockquote { border-left: 3px solid var(--bnb-yellow); padding-left: 0.85rem; color: var(--text-dim); font-style: italic; margin: 0.5rem 0; }
+  .sample-preview table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.72rem; }
+  .sample-preview th { background: var(--surface2); color: var(--text-dim); text-align: left; padding: 0.45rem 0.65rem; border: 1px solid var(--border); }
+  .sample-preview td { padding: 0.45rem 0.65rem; border: 1px solid var(--border); }
   .sample-preview hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
   .sample-preview::-webkit-scrollbar { width: 8px; }
   .sample-preview::-webkit-scrollbar-track { background: var(--surface); }
-  .sample-preview::-webkit-scrollbar-thumb { background: var(--text-dim); }
-  .download-row {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
+  .sample-preview::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 4px; }
+  .download-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
   /* ---- VERIFIER ---- */
   .verifier-section {
-    max-width: 900px;
-    margin: 3rem auto;
-    padding: 0 1rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
   }
-  .input-group { margin-bottom: 1rem; }
+  .verifier-intro {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+    line-height: 1.65;
+    max-width: 650px;
+    margin: 0 auto 2rem;
+  }
+  .verifier-form-container.nes-container {
+    padding: 2rem;
+  }
+  .verifier-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .verifier-form-grid .full-width { grid-column: 1 / -1; }
+  .input-group { margin-bottom: 0; }
+  .input-group .nes-field .nes-input { font-size: 0.85rem; padding: 0.75rem 1rem; }
   .network-toggle {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 0.75rem;
   }
-  .network-toggle .nes-btn { flex: 1; font-size: 0.55rem; }
+  .network-toggle .nes-btn { flex: 1; font-size: 0.6rem; padding: 0.6rem 0.5rem; }
+  .verify-btn-row { margin-top: 0.5rem; }
+  .verify-btn-row .nes-btn { font-size: 0.75rem; padding: 0.85rem 2rem; }
   .status-bar {
     text-align: center;
-    padding: 0.75rem;
-    font-size: 0.8rem;
+    padding: 1rem;
+    font-size: 0.82rem;
     color: var(--text-dim);
     display: none;
   }
@@ -323,82 +355,122 @@
   .status-bar.error { color: var(--red); }
   .results { display: none; }
   .results.visible { display: block; }
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+  }
+  .results-grid .full-width { grid-column: 1 / -1; }
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
     margin-top: 0.75rem;
   }
-  .stat-item .stat-value { font-family: 'Press Start 2P', cursive; font-size: 1rem; font-weight: bold; color: var(--text); }
-  .stat-item .stat-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 0.25rem; }
-  .hash-cell { color: var(--accent); font-size: 0.7rem; }
+  .stat-item { text-align: center; padding: 0.5rem 0; }
+  .stat-item .stat-value { font-family: 'Press Start 2P', cursive; font-size: 1.1rem; font-weight: bold; color: var(--bnb-yellow); }
+  .stat-item .stat-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 0.35rem; }
+  .hash-cell { color: var(--accent); font-size: 0.72rem; }
   .verified-badge {
     display: inline-block;
-    padding: 0.15rem 0.45rem;
+    padding: 0.2rem 0.5rem;
     font-size: 0.65rem;
     font-weight: bold;
     background: rgba(52, 211, 153, 0.15);
     color: var(--green);
+    border: 1px solid rgba(52, 211, 153, 0.3);
   }
   .table-scroll { overflow-x: auto; }
+
   a { color: var(--bnb-yellow); text-decoration: none; }
   a:hover { text-decoration: underline; }
 
   /* ---- FOOTER ---- */
   footer {
     text-align: center;
-    padding: 3rem 1rem 2rem;
+    padding: 3rem 1.25rem 2.5rem;
     color: var(--text-dim);
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     border-top: 4px solid var(--border);
-    margin-top: 3rem;
+    margin-top: 2rem;
   }
   footer a { color: var(--bnb-yellow); }
   footer .footer-brand { font-family: 'Press Start 2P', cursive; font-size: 0.7rem; color: var(--bnb-yellow); margin-bottom: 0.75rem; }
+  footer .footer-links { margin-top: 0.75rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
   .spinner {
     display: inline-block;
-    width: 12px; height: 12px;
+    width: 14px; height: 14px;
     border: 2px solid var(--border);
     border-top-color: var(--bnb-yellow);
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
     vertical-align: middle;
-    margin-right: 0.4rem;
+    margin-right: 0.5rem;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* back to top */
+  .back-to-top {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 99;
+    font-size: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .back-to-top.visible { opacity: 1; pointer-events: auto; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .feature-grid { grid-template-columns: repeat(2, 1fr); }
+    .verifier-form-grid { grid-template-columns: 1fr; }
+    .results-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 0.85rem; }
+  }
   @media (max-width: 600px) {
     .hero-ascii { font-size: 0.35rem; }
-    .hero h1 { font-size: 0.75rem; }
+    .hero h1 { font-size: 0.72rem; line-height: 2.2; }
     .hero p { font-size: 0.78rem; }
+    .hero { padding: 2.5rem 1rem 2rem; }
     .flow { flex-direction: column; }
     .flow-arrow { transform: rotate(90deg); }
     .privacy-grid { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .terminal-body { font-size: 0.6rem; min-height: 280px; padding: 0.75rem; }
+    .terminal-body { font-size: 0.62rem; min-height: 280px; padding: 0.75rem; }
     .feature-grid { grid-template-columns: 1fr; }
-    nav .links { gap: 0.8rem; }
-    nav a { font-size: 0.7rem; }
-    .nes-container { padding: 0.75rem !important; }
+    nav .links { gap: 0.7rem; }
+    nav a { font-size: 0.68rem; }
+    nav .brand { font-size: 0.65rem; }
+    .nes-container { padding: 0.85rem !important; }
+    .verifier-form-container.nes-container { padding: 1.25rem !important; }
     .demo-tabs { flex-wrap: wrap; }
-    .demo-tab { font-size: 0.5rem; padding: 0.3rem 0.5rem; }
-    .table-scroll { overflow-x: auto; }
-    .table-scroll table { min-width: 500px; }
+    .demo-tab { font-size: 0.5rem; padding: 0.3rem 0.6rem; }
+    .table-scroll table { min-width: 520px; }
     .sample-preview { max-height: 300px; }
-    .stat-item .stat-value { font-size: 0.8rem; }
+    .stat-item .stat-value { font-size: 0.85rem; }
+    .pixel-heading { font-size: 0.7rem; }
+    .section-subtitle { font-size: 0.72rem; }
+    .back-to-top { bottom: 1rem; right: 1rem; }
   }
 </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
-  <div class="brand"><i class="nes-icon coin is-small"></i> VIBELOG</div>
-  <div class="links">
-    <a href="#demo">Demo</a>
-    <a href="#features">Features</a>
-    <a href="#sample-report">Sample</a>
-    <a href="#verify">Verify</a>
-    <a href="https://github.com/PugarHuda/VibeLog" target="_blank">GitHub</a>
+  <div class="nav-inner">
+    <a href="#" class="brand"><i class="nes-icon coin is-small"></i> VIBELOG</a>
+    <div class="links">
+      <a href="#demo">Demo</a>
+      <a href="#features">Features</a>
+      <a href="#sample-report">Sample</a>
+      <a href="#verify">Verify</a>
+      <a href="https://github.com/PugarHuda/VibeLog" target="_blank" class="github-link"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
   </div>
 </nav>
 
@@ -411,18 +483,21 @@
     \_/   |_||_.__/ \___| |______\___/  \__, |
                                          |___/</div>
   <h1>Verified AI Build Logs on <span>BNB Chain</span></h1>
-  <p>Auto-generate tamper-proof build documentation for hackathons.<br>
+  <p>Auto-generate tamper-proof build documentation.<br>
   Track your work with git, summarize with AI, anchor proof onchain.</p>
   <div class="hero-actions">
     <a href="https://github.com/PugarHuda/VibeLog" class="nes-btn is-warning" target="_blank">View on GitHub</a>
     <a href="#verify" class="nes-btn is-dark">Verify a Builder</a>
   </div>
-  <div class="install-cmd" onclick="navigator.clipboard.writeText('npx vibelog init').then(()=>this.textContent='Copied!').catch(()=>{})">npx vibelog init</div>
+  <div class="install-cmd" onclick="navigator.clipboard.writeText('npx vibelog init').then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='npx vibelog init'},1500)}).catch(()=>{})">npx vibelog init</div>
 </section>
+
+<div class="section-divider">- - - - - - - - - - - -</div>
 
 <!-- DEMO -->
 <section class="demo-section" id="demo">
   <h2 class="pixel-heading"><i class="nes-icon star is-small"></i> SEE IT IN ACTION</h2>
+  <p class="section-subtitle">Watch VibeLog capture your build journey in real time. Click each tab to see different commands.</p>
   <div class="demo-tabs">
     <button class="nes-btn is-warning demo-tab" onclick="showDemo('workflow')">Workflow</button>
     <button class="nes-btn is-dark demo-tab" onclick="showDemo('status')">Status</button>
@@ -439,9 +514,12 @@
   </div>
 </section>
 
+<div class="section-divider">- - - - - - - - - - - -</div>
+
 <!-- FEATURES -->
 <section class="features" id="features">
   <h2 class="pixel-heading"><i class="nes-icon trophy is-small"></i> FEATURES</h2>
+  <p class="section-subtitle">Everything you need to prove your build is real.</p>
   <div class="feature-grid">
     <div class="nes-container is-dark with-title feature-card">
       <p class="title"><i class="nes-icon star is-small"></i></p>
@@ -471,14 +549,17 @@
     <div class="nes-container is-dark with-title feature-card">
       <p class="title"><i class="nes-icon trophy is-small"></i></p>
       <h3>Web Verifier</h3>
-      <p>Judges verify any builder's checkpoints via browser. No CLI needed, no wallet needed.</p>
+      <p>Anyone can verify checkpoints via browser. No CLI needed, no wallet needed.</p>
     </div>
   </div>
 </section>
 
+<div class="section-divider">- - - - - - - - - - - -</div>
+
 <!-- HOW IT WORKS -->
 <section class="how-it-works">
   <h2 class="pixel-heading">HOW IT WORKS</h2>
+  <p class="section-subtitle">From code to onchain proof in 3 commands.</p>
   <div class="flow">
     <div class="nes-container is-dark flow-step">
       <div class="step-icon">&#128187;</div>
@@ -530,9 +611,12 @@
   </div>
 </section>
 
+<div class="section-divider">- - - - - - - - - - - -</div>
+
 <!-- SAMPLE REPORT -->
 <section class="sample-section" id="sample-report">
   <h2 class="pixel-heading"><i class="nes-icon like is-small"></i> SAMPLE BUILD LOG</h2>
+  <p class="section-subtitle">This is what VibeLog generates. A complete, verifiable record of your build journey.</p>
   <div class="nes-container is-dark with-title">
     <p class="title">BUILD_LOG.md Preview</p>
     <div class="sample-preview" id="samplePreview">
@@ -543,7 +627,6 @@
       <strong>Period:</strong> Jan 15 - Jan 18, 2025<br>
       <strong>Checkpoints:</strong> 4 (all verified onchain)</p>
       <hr>
-
       <h2>Checkpoint #1 - Project Bootstrap</h2>
       <p><strong>Timestamp:</strong> Jan 15, 2025 14:32 UTC<br>
       <strong>Tx:</strong> <code>0xa1b2c3...</code> | <strong>Log Hash:</strong> <code>0x8f3a2b1c...</code></p>
@@ -558,7 +641,6 @@
       <blockquote>Started the DeFi Swap project by scaffolding a Next.js app. Set up Tailwind CSS with a custom dark theme. Built the core swap interface and integrated wallet connection using ethers.js with MetaMask support.</blockquote>
       <p><strong>Stats:</strong> +665 -15 lines | 21 files</p>
       <hr>
-
       <h2>Checkpoint #2 - Smart Contract Integration</h2>
       <p><strong>Timestamp:</strong> Jan 16, 2025 19:45 UTC<br>
       <strong>Tx:</strong> <code>0xd4e5f6...</code> | <strong>Log Hash:</strong> <code>0x2c3d4e5f...</code></p>
@@ -574,8 +656,7 @@
       <blockquote>Deep integration with PancakeSwap router. Full token approval flow, slippage tolerance 0.1-5%, price impact warnings, and a clean confirmation modal before signing.</blockquote>
       <p><strong>Stats:</strong> +497 -36 lines | 13 files</p>
       <hr>
-
-      <h2>Checkpoint #3 - Testing & Error Handling</h2>
+      <h2>Checkpoint #3 - Testing &amp; Error Handling</h2>
       <p><strong>Timestamp:</strong> Jan 17, 2025 16:30 UTC<br>
       <strong>Tx:</strong> <code>0xf6a1b2...</code> | <strong>Log Hash:</strong> <code>0x4e5f6a7b...</code></p>
       <h3>Build Sessions (4 logs)</h3>
@@ -589,8 +670,7 @@
       <blockquote>Comprehensive testing and UX polish. Unit tests for swap math edge cases, mobile layout fixes, error handling for failed transactions, and user-friendly toast notifications.</blockquote>
       <p><strong>Stats:</strong> +453 -82 lines | 15 files</p>
       <hr>
-
-      <h2>Checkpoint #4 - Polish & Deployment</h2>
+      <h2>Checkpoint #4 - Polish &amp; Deployment</h2>
       <p><strong>Timestamp:</strong> Jan 18, 2025 11:20 UTC<br>
       <strong>Tx:</strong> <code>0xb2c3d4...</code> | <strong>Log Hash:</strong> <code>0x6a7b8c9d...</code></p>
       <h3>Build Sessions (3 logs)</h3>
@@ -603,7 +683,6 @@
       <blockquote>Final sprint: code splitting for faster loads, analytics integration, Vercel deployment with custom domain. Project is live and onchain-verified.</blockquote>
       <p><strong>Stats:</strong> +488 -65 lines | 13 files</p>
       <hr>
-
       <h2>Summary</h2>
       <table>
         <tr><th>Metric</th><th>Value</th></tr>
@@ -617,7 +696,7 @@
         <tr><td>Build Duration</td><td>4 days</td></tr>
       </table>
       <h3>Reflection</h3>
-      <p>This build used three AI tools in complementary ways: Claude for architecture and core logic, Cursor for rapid UI iteration, and ChatGPT for research and optimization. Every session was logged automatically through VibeLog's git hooks, creating a verifiable trail from first commit to final deploy. The onchain checkpoints provide cryptographic proof that the work happened in the order and timeframe claimed.</p>
+      <p>This build used three AI tools in complementary ways: Claude for architecture and core logic, Cursor for rapid UI iteration, and ChatGPT for research and optimization. Every session was logged automatically through VibeLog's git hooks, creating a verifiable trail from first commit to final deploy.</p>
     </div>
     <div class="download-row">
       <button class="nes-btn is-warning" onclick="downloadSample()">Download BUILD_LOG.md</button>
@@ -626,83 +705,111 @@
   </div>
 </section>
 
+<div class="section-divider">- - - - - - - - - - - -</div>
+
 <!-- VERIFIER -->
 <section class="verifier-section" id="verify">
   <h2 class="pixel-heading"><i class="nes-icon coin is-small"></i> VERIFY A BUILDER</h2>
-  <div class="nes-container is-dark with-title">
+  <p class="verifier-intro">Enter any builder's wallet address and contract to view their onchain checkpoints. No wallet connection needed &mdash; verification is fully read-only and trustless.</p>
+
+  <div class="nes-container is-dark with-title verifier-form-container">
     <p class="title">Onchain Verifier</p>
-    <div class="input-group">
-      <div class="nes-field">
-        <label>Wallet Address</label>
-        <input type="text" class="nes-input is-dark" id="addressInput" placeholder="0x..." />
+
+    <div class="verifier-form-grid">
+      <div class="input-group">
+        <div class="nes-field">
+          <label>Wallet Address</label>
+          <input type="text" class="nes-input is-dark" id="addressInput" placeholder="0x..." />
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="nes-field">
+          <label>Contract Address</label>
+          <input type="text" class="nes-input is-dark" id="contractInput" placeholder="VibeProof contract address" />
+        </div>
+      </div>
+      <div class="input-group full-width">
+        <label style="font-family:'Press Start 2P',cursive;font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:0.5rem;">Network</label>
+        <div class="network-toggle">
+          <button class="nes-btn is-warning" data-network="testnet" onclick="selectNetwork('testnet')">BSC Testnet</button>
+          <button class="nes-btn is-dark" data-network="mainnet" onclick="selectNetwork('mainnet')">BSC Mainnet</button>
+        </div>
+      </div>
+      <div class="full-width verify-btn-row">
+        <button class="nes-btn is-warning" id="verifyBtn" onclick="verify()" style="width:100%;">VERIFY ONCHAIN</button>
       </div>
     </div>
-    <div class="input-group">
-      <div class="nes-field">
-        <label>Contract Address</label>
-        <input type="text" class="nes-input is-dark" id="contractInput" placeholder="Enter VibeProof contract address" />
-      </div>
-    </div>
-    <div class="input-group">
-      <label style="font-family:'Press Start 2P',cursive;font-size:0.55rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:0.35rem;">Network</label>
-      <div class="network-toggle">
-        <button class="nes-btn is-warning" data-network="testnet" onclick="selectNetwork('testnet')">BSC Testnet</button>
-        <button class="nes-btn is-dark" data-network="mainnet" onclick="selectNetwork('mainnet')">BSC Mainnet</button>
-      </div>
-    </div>
-    <button class="nes-btn is-warning" id="verifyBtn" onclick="verify()" style="width:100%;">VERIFY</button>
   </div>
 
   <div class="status-bar" id="statusBar"></div>
 
   <div class="results" id="results">
-    <div class="nes-container is-dark with-title" style="margin-top:1rem;">
-      <p class="title">Builder Summary</p>
-      <div class="stats-grid">
-        <div class="stat-item">
+    <div class="results-grid">
+      <div class="nes-container is-dark with-title">
+        <p class="title">Checkpoints</p>
+        <div class="stat-item" style="text-align:center;padding:1rem 0;">
           <div class="stat-value" id="totalCheckpoints">0</div>
-          <div class="stat-label">Checkpoints</div>
+          <div class="stat-label">Total Checkpoints</div>
         </div>
-        <div class="stat-item">
+      </div>
+      <div class="nes-container is-dark with-title">
+        <p class="title">Sessions</p>
+        <div class="stat-item" style="text-align:center;padding:1rem 0;">
           <div class="stat-value" id="totalSessions">0</div>
           <div class="stat-label">Build Sessions</div>
         </div>
-        <div class="stat-item">
-          <div class="stat-value" id="firstDate">-</div>
-          <div class="stat-label">First</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="lastDate">-</div>
-          <div class="stat-label">Latest</div>
+      </div>
+      <div class="nes-container is-dark with-title">
+        <p class="title">First Activity</p>
+        <div class="stat-item" style="text-align:center;padding:1rem 0;">
+          <div class="stat-value" id="firstDate" style="font-size:0.75rem;">-</div>
+          <div class="stat-label">First Checkpoint</div>
         </div>
       </div>
-    </div>
-    <div class="nes-container is-dark with-title" style="margin-top:1rem;">
-      <p class="title">Checkpoint History</p>
-      <div class="table-scroll">
-        <table class="nes-table is-bordered is-dark" style="width:100%;">
-          <thead><tr><th>#</th><th>Summary</th><th>Log Hash</th><th>Timestamp</th><th>Status</th></tr></thead>
-          <tbody id="checkpointBody"></tbody>
-        </table>
+      <div class="nes-container is-dark with-title">
+        <p class="title">Latest Activity</p>
+        <div class="stat-item" style="text-align:center;padding:1rem 0;">
+          <div class="stat-value" id="lastDate" style="font-size:0.75rem;">-</div>
+          <div class="stat-label">Latest Checkpoint</div>
+        </div>
       </div>
-      <div id="noResults" style="display:none;text-align:center;padding:2rem;color:var(--text-dim);">No checkpoints found for this address.</div>
+      <div class="nes-container is-dark with-title full-width">
+        <p class="title">Checkpoint History</p>
+        <div class="table-scroll">
+          <table class="nes-table is-bordered is-dark" style="width:100%;">
+            <thead><tr><th>#</th><th>Summary</th><th>Log Hash</th><th>Timestamp</th><th>Status</th></tr></thead>
+            <tbody id="checkpointBody"></tbody>
+          </table>
+        </div>
+        <div id="noResults" style="display:none;text-align:center;padding:2.5rem;color:var(--text-dim);font-size:0.8rem;">No checkpoints found for this address.</div>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- FOOTER -->
 <footer>
   <div class="footer-brand"><i class="nes-icon coin is-small"></i> VibeLog</div>
   <p>Verified AI Build Logs on BNB Chain</p>
-  <p style="margin-top:0.75rem;">
-    <a href="https://github.com/PugarHuda/VibeLog" target="_blank">GitHub</a> &middot;
-    <a href="#sample-report">Sample Output</a> &middot;
-    <a href="#verify">Verifier</a> &middot;
-    Built for BNB Chain Hackathon
-  </p>
+  <div class="footer-links">
+    <a href="https://github.com/PugarHuda/VibeLog" target="_blank">GitHub</a>
+    <a href="#sample-report">Sample Output</a>
+    <a href="#verify">Verifier</a>
+    <a href="https://github.com/PugarHuda/VibeLog/issues" target="_blank">Report Issue</a>
+  </div>
+  <p style="margin-top:1rem;color:var(--border);">Built on BNB Chain</p>
 </footer>
+
+<!-- Back to top -->
+<button class="nes-btn is-warning back-to-top" id="backToTop" onclick="window.scrollTo({top:0})">TOP</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.1/ethers.umd.min.js"></script>
 <script>
+// ---- BACK TO TOP ----
+window.addEventListener('scroll', () => {
+  document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 400);
+});
+
 // ---- TERMINAL DEMO ----
 const demos = {
   workflow: [
@@ -817,7 +924,6 @@ function showDemo(name) {
   });
 }
 
-// Start workflow demo on load
 showDemo('workflow');
 
 // ---- SAMPLE REPORT DOWNLOAD ----
@@ -1078,13 +1184,12 @@ async function verify() {
       document.getElementById('noResults').style.display = 'block';
       hideStatus();
       btn.disabled = false;
-      btn.textContent = 'VERIFY';
+      btn.textContent = 'VERIFY ONCHAIN';
       return;
     }
 
     showStatus('<span class="spinner"></span> Loading ' + count + ' checkpoints...');
 
-    // Load all checkpoints in parallel
     const promises = [];
     for (let i = 0; i < count; i++) {
       promises.push(
@@ -1129,10 +1234,13 @@ async function verify() {
   }
 
   btn.disabled = false;
-  btn.textContent = 'VERIFY';
+  btn.textContent = 'VERIFY ONCHAIN';
 }
 
 document.getElementById('addressInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verify();
+});
+document.getElementById('contractInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') verify();
 });
 </script>
