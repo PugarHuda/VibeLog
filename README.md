@@ -2,17 +2,27 @@
 
 **Proof of Vibe - Auto-generate verified AI build logs with onchain proof**
 
-Built for BNB Chain "Good Vibes Only: OpenClaw Edition" Hackathon | Builders' Tools Track
-
-[Web Verifier](https://PugarHuda.github.io/VibeLog/) | [Example Output](examples/BUILD_LOG.md)
+[Web Verifier](https://PugarHuda.github.io/VibeLog/) | [Sample Output](examples/BUILD_LOG.md) | [npm](https://www.npmjs.com/package/vibelog)
 
 ---
 
 ## What is VibeLog?
 
-A CLI tool that helps hackathon participants automatically generate verified build logs with onchain proof. Think of it as **Git + AI Summarization + Blockchain Notary**.
+A CLI tool that automatically generates verified build logs with onchain proof. Think of it as **Git + AI Summarization + Blockchain Notary**.
 
-> Don't lose hackathon bonus points because you forgot to document. VibeLog auto-generates your build log with onchain proof in 3 commands.
+> Track your work as you code. AI turns commits into readable narratives. Blockchain makes it tamper-proof. 3 commands, zero friction.
+
+## Who Is This For?
+
+**Hackathon Builders** - Auto-document your entire build journey. Judges get verifiable proof of when you built what, with onchain timestamps that can't be faked.
+
+**Freelance Developers** - Show clients exactly what you built and when. No more "trust me" - give them a cryptographically verified build log with every delivery. Prove scope, timeline, and effort.
+
+**Open Source Contributors** - Generate transparent contribution logs for grants, sponsorships, or portfolio. Every PR and commit summarized and timestamped onchain.
+
+**Dev Agencies & Teams** - Automated progress reports for clients. Each sprint checkpoint is hashed and stored onchain - tamper-proof proof of delivery.
+
+**Solo Builders & Indie Hackers** - Build in public with receipts. Share your verified build timeline on social media. Prove you shipped, not just talked.
 
 ## Features
 
@@ -23,7 +33,7 @@ A CLI tool that helps hackathon participants automatically generate verified bui
 - **Privacy-first** - only hashes go onchain, details stay local
 - **Sensitive data detection** - auto-redacts API keys, emails, tokens
 - **Beautiful CLI** with ASCII dashboard, colors, spinners, and interactive prompts
-- **Web verifier** - judges verify checkpoints via browser, no CLI needed
+- **Web verifier** - anyone can verify checkpoints via browser, no CLI needed
 - **Markdown export** - generates professional BUILD_LOG.md
 
 ## Quick Start
@@ -92,7 +102,7 @@ Options:
 Verify build log against blockchain:
 - Compares local checkpoint hashes with onchain data
 - Verifies timeline authenticity
-- Confirms proof-of-work for judges
+- Confirms proof-of-work
 
 ### `vibe status`
 Beautiful dashboard showing:
@@ -100,6 +110,12 @@ Beautiful dashboard showing:
 - Build stats (logs, checkpoints, lines changed)
 - Recent activity with time-ago formatting
 - Checkpoint history
+
+### `vibe timeline`
+Visual timeline of your entire build history:
+- Day-by-day breakdown with timestamps
+- Line change stats per session
+- Checkpoint markers with tx hashes
 
 ### `vibe hooks install` / `vibe hooks remove`
 Zero-friction auto-logging:
@@ -138,7 +154,7 @@ VibeLog uses **Google Gemini API** (free tier):
 **BSC Testnet** (free - for development):
 - Get testnet BNB: https://www.bnbchain.org/en/testnet-faucet
 
-**BSC Mainnet** (for submission):
+**BSC Mainnet** (for production):
 - Requires small amount of BNB (~$0.01 per checkpoint)
 - Get BNB from any exchange (Binance, etc.)
 
@@ -154,6 +170,10 @@ npm run deploy:mainnet
 
 ## How It Works
 
+```
+You Code  >>  vibe log  >>  AI Summary  >>  SHA-256 Hash  >>  BSC Onchain
+```
+
 ### Privacy Model
 
 ```
@@ -168,15 +188,45 @@ Only a hash and user-controlled summary are stored onchain. All detailed logs re
 
 ### Verification
 
-Judges can verify any builder's work:
+Anyone can verify a builder's work:
 
 **Via Web** (no install needed):
 Visit the [Web Verifier](https://PugarHuda.github.io/VibeLog/), enter a wallet address, and see all checkpoints with onchain proof.
 
 **Via CLI**:
-1. Checkpoint hashes are compared against onchain records
-2. Timestamps prove work happened during the hackathon period
-3. Hashes prove log data hasn't been tampered with
+```bash
+vibe verify BUILD_LOG.md
+```
+
+## Use Case Examples
+
+### Hackathon
+```bash
+vibe init                              # Setup at project start
+# ...code for 2 days...
+vibe checkpoint "Day 1 - MVP complete" # End of day 1
+vibe checkpoint "Day 2 - Final polish" # Before submission
+vibe export                            # Generate BUILD_LOG.md for judges
+```
+
+### Freelance Project
+```bash
+vibe init                                    # Setup at project kickoff
+vibe hooks install                           # Auto-log every commit
+# ...work on client project...
+vibe checkpoint "Sprint 1 - Auth system"     # End of sprint
+vibe checkpoint "Sprint 2 - Dashboard"       # End of sprint
+vibe export -n "Client Project"              # Send report to client
+```
+
+### Open Source / Build in Public
+```bash
+vibe init
+vibe hooks install
+# ...contribute to repo...
+vibe checkpoint "Added GraphQL API layer"
+vibe export                                  # Share on Twitter/blog
+```
 
 ## Smart Contract
 
@@ -191,7 +241,7 @@ function getCheckpointCount(address builder) external view
 ## Tech Stack
 
 All free/open-source:
-- **Runtime**: Node.js / TypeScript
+- **Runtime**: Node.js / TypeScript (ESM)
 - **CLI**: Commander.js, Chalk, Ora, Inquirer
 - **Git**: simple-git
 - **Blockchain**: ethers.js v6, BNB Smart Chain (BSC)
@@ -227,18 +277,18 @@ npm run compile
 | BSC Mainnet checkpoint | ~$0.01 |
 | Hardhat / TypeScript | Free |
 
-**Total cost for full hackathon usage: < $0.10**
+**Total cost for real-world usage: < $0.10 per project**
 
 ## Why VibeLog?
 
-Every hackathon requires build documentation. Most builders either:
+Whether you're building for a hackathon, delivering to a client, or shipping your own product - everyone needs build documentation. Most developers either:
 - Forget to document until the last minute
 - Write vague logs from memory after the fact
 - Can't prove when they actually built what
 
-VibeLog solves all three: it **auto-captures** your work as you code, **AI-summarizes** it into readable narratives, and **anchors proof onchain** so judges know it's real.
+VibeLog solves all three: it **auto-captures** your work as you code, **AI-summarizes** it into readable narratives, and **anchors proof onchain** so anyone can verify it's real.
 
-Other builders can adopt VibeLog too - run `npx vibelog init` in any project and start logging in 30 seconds.
+Run `npx vibelog init` in any project and start logging in 30 seconds.
 
 ## License
 
@@ -246,4 +296,4 @@ MIT
 
 ---
 
-*Built for BNB Chain. Built with AI. Verified onchain.*
+*Built on BNB Chain. Powered by AI. Verified onchain.*
