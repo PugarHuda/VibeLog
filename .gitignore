@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+cache/
+artifacts/
+typechain-types/
+.vibelog/
+*.log
+coverage/
+.claude/

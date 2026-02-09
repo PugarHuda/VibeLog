@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeLog - Verified AI Build Logs on BNB Chain</title>
+<meta name="description" content="Auto-generate verified AI build logs with onchain proof. Track hackathon builds, create tamper-proof checkpoints on BSC.">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #181825;
+    --border: #1e1e2e;
+    --text: #e0e0e8;
+    --text-dim: #8888a0;
+    --bnb-yellow: #f0b90b;
+    --bnb-gold: #d4a000;
+    --accent: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --cyan: #67e8f9;
+    --blue: #60a5fa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem;
+  }
+  nav .brand { color: var(--bnb-yellow); font-weight: bold; font-size: 1rem; letter-spacing: 1px; }
+  nav .links { display: flex; gap: 1.5rem; }
+  nav a { color: var(--text-dim); text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
+  nav a:hover { color: var(--bnb-yellow); }
+
+  /* ---- HERO ---- */
+  .hero {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .hero-ascii {
+    color: var(--bnb-yellow);
+    font-size: 0.55rem;
+    line-height: 1.15;
+    white-space: pre;
+    margin-bottom: 1.25rem;
+  }
+  .hero h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+  .hero h1 span { color: var(--bnb-yellow); }
+  .hero p {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+  .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--bnb-yellow);
+    color: #000;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--bnb-yellow); color: var(--bnb-yellow); }
+  .install-cmd {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+    color: var(--green);
+    margin-top: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .install-cmd:hover { border-color: var(--bnb-yellow); }
+  .install-cmd::before { content: '$ '; color: var(--text-dim); }
+
+  /* ---- TERMINAL DEMO ---- */
+  .demo-section {
+    max-width: 750px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  .demo-section h2 {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--bnb-yellow);
+    margin-bottom: 1.25rem;
+    letter-spacing: 1px;
+  }
+  .terminal {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: #161b22;
+    border-bottom: 1px solid #21262d;
+  }
+  .terminal-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .terminal-dot.r { background: #ff5f57; }
+  .terminal-dot.y { background: #febc2e; }
+  .terminal-dot.g { background: #28c840; }
+  .terminal-title {
+    flex: 1;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+  }
+  .terminal-body {
+    padding: 1rem 1.25rem;
+    font-size: 0.75rem;
+    line-height: 1.65;
+    min-height: 340px;
+    position: relative;
+  }
+  .term-line {
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .term-prompt { color: var(--green); }
+  .term-cmd { color: #fff; font-weight: bold; }
+  .term-yellow { color: var(--bnb-yellow); }
+  .term-cyan { color: var(--cyan); }
+  .term-green { color: var(--green); }
+  .term-dim { color: var(--text-dim); }
+  .term-red { color: var(--red); }
+  .term-blue { color: var(--blue); }
+  .term-bold { font-weight: bold; color: #fff; }
+  .term-accent { color: var(--accent); }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .demo-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: -1px;
+    position: relative;
+    z-index: 1;
+    padding: 0 1rem;
+  }
+  .demo-tab {
+    padding: 0.5rem 1rem;
+    font-family: inherit;
+    font-size: 0.75rem;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .demo-tab.active {
+    background: #0d1117;
+    color: var(--bnb-yellow);
+    border-color: #21262d;
+  }
+  .demo-tab:hover { color: var(--text); }
+
+  /* ---- FEATURES ---- */
+  .features {
+    max-width: 900px;
+    margin: 3rem auto;
+    padding: 0 1rem;
+  }
+  .features h2 {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--bnb-yellow);
+    margin-bottom: 1.5rem;
+    letter-spacing: 1px;
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .feature-card h3 {
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .feature-card p {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .feature-icon { font-size: 1.2rem; margin-bottom: 0.5rem; }
+
+  /* ---- HOW IT WORKS ---- */
+  .how-it-works {
+    max-width: 750px;
+    margin: 3rem auto;
+    padding: 0 1rem;
+  }
+  .how-it-works h2 {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--bnb-yellow);
+    margin-bottom: 1.5rem;
+    letter-spacing: 1px;
+  }
+  .flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .flow-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    min-width: 100px;
+  }
+  .flow-step .step-icon { font-size: 1.3rem; margin-bottom: 0.25rem; }
+  .flow-step .step-label { font-size: 0.7rem; color: var(--text-dim); }
+  .flow-arrow { color: var(--bnb-yellow); font-size: 1.2rem; }
+  .privacy-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .privacy-col h4 {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .privacy-col.onchain h4 { color: var(--bnb-yellow); }
+  .privacy-col.local h4 { color: var(--green); }
+  .privacy-col ul {
+    list-style: none;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+  .privacy-col ul li::before { content: '  '; }
+  .privacy-col.onchain ul li::before { content: '> '; color: var(--bnb-yellow); }
+  .privacy-col.local ul li::before { content: '> '; color: var(--green); }
+
+  /* ---- VERIFIER ---- */
+  .verifier-section {
+    max-width: 900px;
+    margin: 3rem auto;
+    padding: 0 1rem;
+  }
+  .verifier-section h2 {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--bnb-yellow);
+    margin-bottom: 1.25rem;
+    letter-spacing: 1px;
+  }
+  .search-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .input-group { margin-bottom: 1rem; }
+  .input-group label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: var(--bnb-yellow); }
+  input[type="text"]::placeholder { color: var(--text-dim); opacity: 0.5; }
+  .network-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .network-btn {
+    flex: 1;
+    padding: 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .network-btn.active {
+    border-color: var(--bnb-yellow);
+    color: var(--bnb-yellow);
+    background: rgba(240, 185, 11, 0.08);
+  }
+  .network-btn:hover { border-color: var(--bnb-gold); }
+  .verify-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--bnb-yellow);
+    color: #000;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    letter-spacing: 1px;
+  }
+  .verify-btn:hover { opacity: 0.9; }
+  .verify-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .status-bar {
+    text-align: center;
+    padding: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    display: none;
+  }
+  .status-bar.visible { display: block; }
+  .status-bar.error { color: var(--red); }
+  .results { display: none; }
+  .results.visible { display: block; }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .summary-card h3 {
+    font-size: 0.8rem;
+    color: var(--bnb-yellow);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1rem;
+  }
+  .stat-item .stat-value { font-size: 1.5rem; font-weight: bold; color: var(--text); }
+  .stat-item .stat-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .checkpoint-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .checkpoint-table h3 {
+    font-size: 0.8rem;
+    color: var(--bnb-yellow);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 1.25rem 1.5rem 0.75rem;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 0.55rem 1.25rem;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 0.75rem 1.25rem; font-size: 0.75rem; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(240, 185, 11, 0.03); }
+  .hash-cell { color: var(--accent); font-size: 0.7rem; }
+  .verified-badge {
+    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--green);
+  }
+  a { color: var(--bnb-yellow); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .no-results { text-align: center; padding: 2.5rem; color: var(--text-dim); }
+
+  /* ---- FOOTER ---- */
+  footer {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+  footer a { color: var(--bnb-yellow); }
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--bnb-yellow);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 0.4rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 600px) {
+    .hero-ascii { font-size: 0.4rem; }
+    .hero h1 { font-size: 1.2rem; }
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+    .privacy-box { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    th, td { padding: 0.5rem 0.7rem; font-size: 0.65rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">VIBELOG</div>
+  <div class="links">
+    <a href="#demo">Demo</a>
+    <a href="#features">Features</a>
+    <a href="#verify">Verify</a>
+    <a href="https://github.com/PugarHuda/VibeLog" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-ascii"> __     __ _  _            _
+ \ \   / /(_)| |__   ___  | |     ___    __ _
+  \ \ / / | || '_ \ / _ \ | |    / _ \  / _` |
+   \ V /  | || |_) |  __/ | |___| (_) || (_| |
+    \_/   |_||_.__/ \___| |______\___/  \__, |
+                                         |___/</div>
+  <h1>Verified AI Build Logs on <span>BNB Chain</span></h1>
+  <p>Auto-generate tamper-proof build documentation for hackathons.<br>
+  Track your work with git, summarize with AI, anchor proof onchain.</p>
+  <div class="hero-actions">
+    <a href="https://github.com/PugarHuda/VibeLog" class="btn btn-primary" target="_blank">View on GitHub</a>
+    <a href="#verify" class="btn btn-outline">Verify a Builder</a>
+  </div>
+  <div class="install-cmd" onclick="navigator.clipboard.writeText('npx vibelog init').then(()=>this.textContent='Copied!').catch(()=>{})">npx vibelog init</div>
+</section>
+
+<!-- DEMO -->
+<section class="demo-section" id="demo">
+  <h2>SEE IT IN ACTION</h2>
+  <div class="demo-tabs">
+    <button class="demo-tab active" onclick="showDemo('workflow')">Workflow</button>
+    <button class="demo-tab" onclick="showDemo('status')">Status</button>
+    <button class="demo-tab" onclick="showDemo('timeline')">Timeline</button>
+  </div>
+  <div class="terminal">
+    <div class="terminal-bar">
+      <div class="terminal-dot r"></div>
+      <div class="terminal-dot y"></div>
+      <div class="terminal-dot g"></div>
+      <div class="terminal-title">vibelog &mdash; terminal</div>
+    </div>
+    <div class="terminal-body" id="terminalBody"></div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <h2>FEATURES</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">&#9889;</div>
+      <h3>Zero-Friction Logging</h3>
+      <p>Install a git hook and every commit auto-logs. No manual steps, just code and commit.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#129302;</div>
+      <h3>AI-Powered Narratives</h3>
+      <p>Google Gemini (free tier) generates readable build narratives from your raw commits and diffs.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128279;</div>
+      <h3>Onchain Proof</h3>
+      <p>SHA-256 hash of your logs anchored on BSC. Tamper-proof, timestamped, independently verifiable.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128274;</div>
+      <h3>Privacy-First</h3>
+      <p>Only hashes go onchain. Your code, diffs, and prompts stay local. API keys auto-redacted.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128196;</div>
+      <h3>Beautiful Exports</h3>
+      <p>Generate polished BUILD_LOG.md with stats, timeline, onchain proof links, and AI summaries.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#127760;</div>
+      <h3>Web Verifier</h3>
+      <p>Judges verify any builder's checkpoints via browser. No CLI needed, no wallet needed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works">
+  <h2>HOW IT WORKS</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="step-icon">&#128187;</div>
+      <div class="step-label">You Code</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-icon">&#128221;</div>
+      <div class="step-label">vibe log</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-icon">&#129302;</div>
+      <div class="step-label">AI Summary</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-icon">&#9939;</div>
+      <div class="step-label">SHA-256 Hash</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-icon">&#128279;</div>
+      <div class="step-label">BSC Onchain</div>
+    </div>
+  </div>
+  <div class="privacy-box">
+    <div class="privacy-col onchain">
+      <h4>Onchain (Public)</h4>
+      <ul>
+        <li>SHA-256 hash</li>
+        <li>Summary (200 chars)</li>
+        <li>Timestamp</li>
+        <li>Builder address</li>
+      </ul>
+    </div>
+    <div class="privacy-col local">
+      <h4>Local (Private)</h4>
+      <ul>
+        <li>Full log messages</li>
+        <li>Git diffs &amp; commits</li>
+        <li>AI prompts used</li>
+        <li>File contents</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- VERIFIER -->
+<section class="verifier-section" id="verify">
+  <h2>VERIFY A BUILDER</h2>
+  <div class="search-box">
+    <div class="input-group">
+      <label>Wallet Address</label>
+      <input type="text" id="addressInput" placeholder="0x..." />
+    </div>
+    <div class="input-group">
+      <label>Contract Address</label>
+      <input type="text" id="contractInput" placeholder="Enter VibeProof contract address" />
+    </div>
+    <div class="input-group">
+      <label>Network</label>
+      <div class="network-toggle">
+        <button class="network-btn active" data-network="testnet" onclick="selectNetwork('testnet')">BSC Testnet</button>
+        <button class="network-btn" data-network="mainnet" onclick="selectNetwork('mainnet')">BSC Mainnet</button>
+      </div>
+    </div>
+    <button class="verify-btn" id="verifyBtn" onclick="verify()">VERIFY</button>
+  </div>
+
+  <div class="status-bar" id="statusBar"></div>
+
+  <div class="results" id="results">
+    <div class="summary-card">
+      <h3>Builder Summary</h3>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="totalCheckpoints">0</div>
+          <div class="stat-label">Checkpoints</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="totalSessions">0</div>
+          <div class="stat-label">Build Sessions</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="firstDate">-</div>
+          <div class="stat-label">First</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="lastDate">-</div>
+          <div class="stat-label">Latest</div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint-table">
+      <h3>Checkpoint History</h3>
+      <table>
+        <thead><tr><th>#</th><th>Summary</th><th>Log Hash</th><th>Timestamp</th><th>Status</th></tr></thead>
+        <tbody id="checkpointBody"></tbody>
+      </table>
+      <div class="no-results" id="noResults" style="display:none;">No checkpoints found for this address.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>VibeLog &middot; Verified AI Build Logs on BNB Chain</p>
+  <p style="margin-top:0.5rem;">
+    <a href="https://github.com/PugarHuda/VibeLog" target="_blank">GitHub</a> &middot;
+    <a href="https://github.com/PugarHuda/VibeLog/blob/main/examples/BUILD_LOG.md" target="_blank">Example Output</a> &middot;
+    Built for BNB Chain Hackathon
+  </p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.1/ethers.umd.min.js"></script>
+<script>
+// ---- TERMINAL DEMO ----
+const demos = {
+  workflow: [
+    { text: '<span class="term-prompt">$</span> <span class="term-cmd">npx vibelog init</span>', delay: 0 },
+    { text: '<span class="term-yellow"> __     __ _  _            _</span>', delay: 400 },
+    { text: '<span class="term-yellow"> \\ \\   / /(_)| |__   ___  | |     ___    __ _</span>', delay: 50 },
+    { text: '<span class="term-yellow">  \\ \\ / / | || \'_ \\ / _ \\ | |    / _ \\  / _` |</span>', delay: 50 },
+    { text: '<span class="term-yellow">   \\ V /  | || |_) |  __/ | |___| (_) || (_| |</span>', delay: 50 },
+    { text: '<span class="term-yellow">    \\_/   |_||_.__/ \\___| |______\\___/  \\__, |</span>', delay: 50 },
+    { text: '<span class="term-dim">                                         |___/</span>', delay: 50 },
+    { text: '', delay: 200 },
+    { text: '<span class="term-green">&#10004;</span> VibeLog initialized! Network: <span class="term-yellow">BSC Testnet</span>', delay: 500 },
+    { text: '<span class="term-green">&#10004;</span> Git post-commit hook installed!', delay: 300 },
+    { text: '', delay: 600 },
+    { text: '<span class="term-prompt">$</span> <span class="term-cmd">vibe log "Implemented token swap contract"</span>', delay: 0 },
+    { text: '<span class="term-green">&#10004;</span> Log entry saved!', delay: 500 },
+    { text: '<span class="term-blue">  Files:</span> <span class="term-dim">contracts/Swap.sol, test/swap.test.ts</span>', delay: 200 },
+    { text: '<span class="term-blue">  Changes:</span> <span class="term-green">+156</span> <span class="term-red">-12</span> lines', delay: 200 },
+    { text: '<span class="term-cyan">  AI:</span> <span class="term-dim">Built core swap logic with slippage protection</span>', delay: 400 },
+    { text: '', delay: 600 },
+    { text: '<span class="term-prompt">$</span> <span class="term-cmd">vibe checkpoint "Day 1 - Core contracts"</span>', delay: 0 },
+    { text: '<span class="term-dim">  Submitting to BSC...</span>', delay: 500 },
+    { text: '<span class="term-green">&#10004;</span> Transaction confirmed!', delay: 600 },
+    { text: '', delay: 100 },
+    { text: '<span class="term-green">&#127881; CHECKPOINT STORED!</span>', delay: 200 },
+    { text: '<span class="term-dim">  TxHash: 0xa1b2c3...d4e5f6</span>', delay: 150 },
+    { text: '<span class="term-dim">  Explorer: </span><span class="term-yellow">bscscan.com/tx/0xa1b2...</span>', delay: 150 },
+    { text: '<span class="term-dim">  Cost: $0.008</span>', delay: 150 },
+  ],
+  status: [
+    { text: '<span class="term-prompt">$</span> <span class="term-cmd">vibe status</span>', delay: 0 },
+    { text: '', delay: 300 },
+    { text: '<span class="term-dim">  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>', delay: 200 },
+    { text: '<span class="term-dim">  &#9474;</span> <span class="term-yellow term-bold">PROJECT</span><span class="term-dim">                                      &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474; Path:    my-defi-project              &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474; Branch:  </span><span class="term-cyan">main</span><span class="term-dim">                            &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474; Network: </span><span class="term-yellow">BSC Testnet</span><span class="term-dim">                    &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474; Wallet:  </span><span class="term-cyan">0x742d...bD18</span><span class="term-dim">                  &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474; Balance: </span><span class="term-green">0.4821</span><span class="term-dim"> BNB                      &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span>', delay: 50 },
+    { text: '', delay: 200 },
+    { text: '<span class="term-dim">  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>', delay: 100 },
+    { text: '<span class="term-dim">  &#9474;</span> <span class="term-yellow term-bold">BUILD STATS</span><span class="term-dim">                                  &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474;</span> <span class="term-bold">12</span><span class="term-dim"> log entries  |  </span><span class="term-bold">3</span><span class="term-dim"> checkpoints         &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474;</span> <span class="term-green">+1,539</span> <span class="term-red">-130</span><span class="term-dim"> lines changed              &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474; Gas spent: 285,432 wei                 &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9474; Pending:   </span><span class="term-green">All checkpointed</span><span class="term-dim">             &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span>', delay: 50 },
+    { text: '', delay: 200 },
+    { text: '  <span class="term-yellow">[First Log]</span> <span class="term-yellow">[Prolific (10+)]</span> <span class="term-yellow">[Onchain]</span> <span class="term-yellow">[1K Lines]</span>', delay: 300 },
+  ],
+  timeline: [
+    { text: '<span class="term-prompt">$</span> <span class="term-cmd">vibe timeline</span>', delay: 0 },
+    { text: '', delay: 300 },
+    { text: '  <span class="term-yellow term-bold">BUILD TIMELINE</span>', delay: 200 },
+    { text: '', delay: 100 },
+    { text: '  <span class="term-bold">Sat, Feb 8</span>', delay: 200 },
+    { text: '<span class="term-dim">  &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9500;&#9472;</span><span class="term-cyan">&#9679;</span><span class="term-dim"> 14:02</span> Initialize Next.js project <span class="term-green">+342</span><span class="term-red">-0</span>', delay: 150 },
+    { text: '<span class="term-dim">  &#9500;&#9472;</span><span class="term-cyan">&#9679;</span><span class="term-dim"> 14:15</span> Add Tailwind CSS config <span class="term-green">+89</span><span class="term-red">-3</span>', delay: 150 },
+    { text: '<span class="term-dim">  &#9500;&#9472;</span><span class="term-cyan">&#9679;</span><span class="term-dim"> 15:30</span> Create swap interface component <span class="term-green">+156</span><span class="term-red">-0</span>', delay: 150 },
+    { text: '<span class="term-dim">  &#9500;&#9472;</span><span class="term-cyan">&#9679;</span><span class="term-dim"> 16:45</span> Connect wallet with ethers.js <span class="term-green">+78</span><span class="term-red">-12</span>', delay: 150 },
+    { text: '<span class="term-dim">  &#9492;&#9472;</span><span class="term-yellow">&#9670;</span><span class="term-dim"> 17:00</span> <span class="term-yellow term-bold">CHECKPOINT</span> <span class="term-dim">Day 1 - UI complete</span>', delay: 200 },
+    { text: '<span class="term-dim">          4 logs | 0xa1b2c3...</span>', delay: 100 },
+    { text: '', delay: 200 },
+    { text: '  <span class="term-bold">Sun, Feb 9</span>', delay: 200 },
+    { text: '<span class="term-dim">  &#9474;</span>', delay: 50 },
+    { text: '<span class="term-dim">  &#9500;&#9472;</span><span class="term-cyan">&#9679;</span><span class="term-dim"> 09:10</span> Write PancakeSwap router <span class="term-green">+95</span><span class="term-red">-0</span>', delay: 150 },
+    { text: '<span class="term-dim">  &#9500;&#9472;</span><span class="term-cyan">&#9679;</span><span class="term-dim"> 10:30</span> Implement token approval flow <span class="term-green">+134</span><span class="term-red">-8</span>', delay: 150 },
+    { text: '<span class="term-dim">  &#9500;&#9472;</span><span class="term-cyan">&#9679;</span><span class="term-dim"> 11:45</span> Add slippage tolerance <span class="term-green">+67</span><span class="term-red">-5</span>', delay: 150 },
+    { text: '<span class="term-dim">  &#9492;&#9472;</span><span class="term-yellow">&#9670;</span><span class="term-dim"> 12:00</span> <span class="term-yellow term-bold">CHECKPOINT</span> <span class="term-dim">Day 2 - Smart contracts</span>', delay: 200 },
+    { text: '<span class="term-dim">          3 logs | 0xd4e5f6...</span>', delay: 100 },
+    { text: '', delay: 300 },
+    { text: '<span class="term-dim">  &#9472;&#9472;&#9472; 7 logs &#183; 2 checkpoints &#183; span: 22h &#9472;&#9472;&#9472;</span>', delay: 200 },
+  ],
+};
+
+let demoTimer = null;
+let currentDemo = '';
+
+function showDemo(name) {
+  if (currentDemo === name) return;
+  currentDemo = name;
+  document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.demo-tab[onclick="showDemo('${name}')"]`).classList.add('active');
+  if (demoTimer) clearTimeout(demoTimer);
+  const body = document.getElementById('terminalBody');
+  body.innerHTML = '';
+  const lines = demos[name];
+  let cumDelay = 0;
+  lines.forEach((line, i) => {
+    cumDelay += line.delay;
+    demoTimer = setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'term-line';
+      div.innerHTML = line.text || '&nbsp;';
+      div.style.animationDelay = '0s';
+      body.appendChild(div);
+      body.scrollTop = body.scrollHeight;
+    }, cumDelay);
+  });
+}
+
+// Start workflow demo on load
+showDemo('workflow');
+
+// ---- VERIFIER ----
+const NETWORKS = {
+  testnet: {
+    rpcUrl: 'https://data-seed-prebsc-1-s1.bnbchain.org:8545',
+    explorerUrl: 'https://testnet.bscscan.com',
+    name: 'BSC Testnet',
+  },
+  mainnet: {
+    rpcUrl: 'https://bsc-dataseed.binance.org',
+    explorerUrl: 'https://bscscan.com',
+    name: 'BSC Mainnet',
+  },
+};
+
+const ABI = [
+  "function getCheckpointCount(address builder) external view returns (uint256)",
+  "function getCheckpoint(address builder, uint256 index) external view returns (tuple(bytes32 logHash, string summary, uint256 timestamp, uint256 sessionCount))",
+];
+
+let selectedNetwork = 'testnet';
+
+function selectNetwork(network) {
+  selectedNetwork = network;
+  document.querySelectorAll('.network-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.network === network);
+  });
+}
+
+function showStatus(msg, isError) {
+  const el = document.getElementById('statusBar');
+  el.className = 'status-bar visible' + (isError ? ' error' : '');
+  el.innerHTML = msg;
+}
+
+function hideStatus() {
+  document.getElementById('statusBar').className = 'status-bar';
+}
+
+function formatDate(ts) {
+  return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatDateTime(ts) {
+  return new Date(ts * 1000).toLocaleString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function truncateHash(hash) {
+  if (!hash) return '-';
+  return hash.substring(0, 10) + '...' + hash.substring(hash.length - 8);
+}
+
+async function verify() {
+  const address = document.getElementById('addressInput').value.trim();
+  const customContract = document.getElementById('contractInput').value.trim();
+
+  if (!address || !ethers.isAddress(address)) {
+    showStatus('Please enter a valid wallet address.', true);
+    return;
+  }
+
+  if (!customContract) {
+    showStatus('Please enter a VibeProof contract address.', true);
+    return;
+  }
+
+  const btn = document.getElementById('verifyBtn');
+  btn.disabled = true;
+  btn.textContent = 'VERIFYING...';
+  showStatus('<span class="spinner"></span> Connecting to ' + NETWORKS[selectedNetwork].name + '...');
+  document.getElementById('results').className = 'results';
+
+  try {
+    const net = NETWORKS[selectedNetwork];
+    const provider = new ethers.JsonRpcProvider(net.rpcUrl);
+    const contract = new ethers.Contract(customContract, ABI, provider);
+
+    showStatus('<span class="spinner"></span> Reading checkpoints...');
+    const count = Number(await contract.getCheckpointCount(address));
+
+    if (count === 0) {
+      document.getElementById('results').className = 'results visible';
+      document.getElementById('totalCheckpoints').textContent = '0';
+      document.getElementById('totalSessions').textContent = '0';
+      document.getElementById('firstDate').textContent = '-';
+      document.getElementById('lastDate').textContent = '-';
+      document.getElementById('checkpointBody').innerHTML = '';
+      document.getElementById('noResults').style.display = 'block';
+      hideStatus();
+      btn.disabled = false;
+      btn.textContent = 'VERIFY';
+      return;
+    }
+
+    showStatus('<span class="spinner"></span> Loading ' + count + ' checkpoints...');
+
+    const checkpoints = [];
+    for (let i = 0; i < count; i++) {
+      const cp = await contract.getCheckpoint(address, i);
+      checkpoints.push({
+        index: i + 1,
+        logHash: cp.logHash,
+        summary: cp.summary,
+        timestamp: Number(cp.timestamp),
+        sessionCount: Number(cp.sessionCount),
+      });
+    }
+
+    document.getElementById('totalCheckpoints').textContent = count;
+    document.getElementById('totalSessions').textContent =
+      checkpoints.length > 0 ? checkpoints[checkpoints.length - 1].sessionCount : 0;
+    document.getElementById('firstDate').textContent = formatDate(checkpoints[0].timestamp);
+    document.getElementById('lastDate').textContent = formatDate(checkpoints[checkpoints.length - 1].timestamp);
+
+    const tbody = document.getElementById('checkpointBody');
+    tbody.innerHTML = '';
+    document.getElementById('noResults').style.display = 'none';
+
+    checkpoints.forEach(cp => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + cp.index + '</td>' +
+        '<td>' + cp.summary + '</td>' +
+        '<td class="hash-cell" title="' + cp.logHash + '">' + truncateHash(cp.logHash) + '</td>' +
+        '<td>' + formatDateTime(cp.timestamp) + '</td>' +
+        '<td><span class="verified-badge">VERIFIED</span></td>';
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('results').className = 'results visible';
+    hideStatus();
+  } catch (err) {
+    console.error(err);
+    showStatus('Error: ' + (err.reason || err.message || 'Failed to connect'), true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'VERIFY';
+}
+
+document.getElementById('addressInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verify();
+});
+</script>
+</body>
+</html>
