@@ -89,7 +89,7 @@
 
 All checkpoints are independently verifiable onchain:
 - **Contract:** [`0x1234...5678`](https://testnet.bscscan.com/address/0x1234567890abcdef1234567890abcdef12345678)
-- **Verify online:** [VibeLog Verifier](https://nicholasrossi0530.github.io/VibeLog/)
+- **Verify online:** [VibeLog Verifier](https://PugarHuda.github.io/VibeLog/)
 - **Verify via CLI:** `npx vibelog verify BUILD_LOG.md`
 
 ---

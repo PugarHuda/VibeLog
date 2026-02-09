@@ -116,7 +116,7 @@ export class ReportGenerator {
     if (config.network.contractAddress && config.network.contractAddress !== zeroAddr) {
       md += `*Verified Onchain: [${config.network.contractAddress}](${explorerUrl}/address/${config.network.contractAddress})*\n`;
     }
-    md += `*Verify online: [VibeLog Verifier](https://nicholasrossi0530.github.io/VibeLog/)*\n`;
+    md += `*Verify online: [VibeLog Verifier](https://PugarHuda.github.io/VibeLog/)*\n`;
 
     return md;
   }
