@@ -1,7 +1,7 @@
 {
   "name": "vibelog",
-  "version": "1.0.0",
-  "description": "Auto-generate verified AI build logs for hackathons with onchain proof",
+  "version": "2.0.0",
+  "description": "Auto-generate verified AI build logs for hackathons with onchain proof - Now with offline mode, team collaboration, analytics, and more!",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -31,7 +31,14 @@
     "bsc",
     "ai",
     "documentation",
-    "cli"
+    "cli",
+    "team-collaboration",
+    "analytics",
+    "offline-mode",
+    "code-quality",
+    "github-integration",
+    "verification",
+    "proof-of-work"
   ],
   "author": "PugarHuda",
   "license": "MIT",

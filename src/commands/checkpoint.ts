@@ -1,10 +1,12 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { isInitialized, loadConfig, sanitizeSummary } from '../utils/config.js';
+import { isInitialized, loadConfig, sanitizeSummary, saveConfig } from '../utils/config.js';
 import { generateLogHash } from '../utils/crypto.js';
 import { LogManager } from '../services/LogManager.js';
 import { BlockchainService } from '../services/BlockchainService.js';
+import { OfflineQueueService } from '../services/OfflineQueueService.js';
+import { NotificationService } from '../services/NotificationService.js';
 import { NETWORKS } from '../types/index.js';
 
 export async function checkpointCommand(summary: string, options?: { dryRun?: boolean }): Promise<void> {
@@ -90,12 +92,19 @@ export async function checkpointCommand(summary: string, options?: { dryRun?: bo
     return;
   }
 
-  const { proceed } = await inquirer.prompt([
+  const { proceed, saveOffline } = await inquirer.prompt([
     {
       type: 'confirm',
       name: 'proceed',
       message: 'Proceed with onchain submission?',
       default: true,
+    },
+    {
+      type: 'confirm',
+      name: 'saveOffline',
+      message: 'Save to offline queue if submission fails?',
+      default: true,
+      when: (answers) => answers.proceed,
     },
   ]);
 
@@ -149,6 +158,19 @@ export async function checkpointCommand(summary: string, options?: { dryRun?: bo
     console.log(chalk.gray(`   Hash: ${logHash.substring(0, 18)}...`));
     console.log(chalk.gray(`   Summary: "${sanitized}"`));
     console.log(chalk.gray(`   Logs included: ${pendingLogs.length}`));
+
+    // Update stats
+    config.stats.totalCheckpoints++;
+    config.stats.totalGasSpent = (parseFloat(config.stats.totalGasSpent) + parseFloat(result.cost)).toFixed(6);
+    config.lastCheckpoint = Math.floor(Date.now() / 1000);
+    saveConfig(config);
+
+    // Check notifications
+    const notificationService = new NotificationService();
+    if (notificationService.shouldNotifyMilestone(config.stats.totalCheckpoints)) {
+      console.log(chalk.yellow(`\n${notificationService.generateReminderMessage('milestone', { count: config.stats.totalCheckpoints })}`));
+    }
+
   } catch (error: any) {
     spinner.fail('Transaction failed');
     console.log(chalk.red(`   Error: ${error.message}`));
@@ -162,6 +184,16 @@ export async function checkpointCommand(summary: string, options?: { dryRun?: bo
         console.log(chalk.yellow('   Get BNB from an exchange or bridge'));
       }
     }
+
+    // Save to offline queue if enabled
+    if (saveOffline) {
+      const queueService = new OfflineQueueService();
+      const queueId = queueService.addToQueue(sanitized, pendingLogs);
+      console.log(chalk.yellow(`\n💾 Checkpoint saved to offline queue (ID: ${queueId})`));
+      console.log(chalk.gray('   Run `vibe sync` when you have internet connection'));
+      return;
+    }
+
     process.exit(1);
   }
 }

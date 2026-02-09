@@ -6,22 +6,30 @@ import { isInitialized, loadConfig } from '../utils/config.js';
 import { LogManager } from '../services/LogManager.js';
 import { ReportGenerator } from '../services/ReportGenerator.js';
 import { AISummarizer } from '../services/AISummarizer.js';
+import { ExportService, ExportFormat, ExportTemplate } from '../services/ExportService.js';
 
-export async function exportCommand(options: { output?: string; name?: string; json?: boolean }): Promise<void> {
+export async function exportCommand(options: { 
+  output?: string; 
+  name?: string; 
+  json?: boolean;
+  format?: ExportFormat;
+  template?: ExportTemplate;
+}): Promise<void> {
   if (!isInitialized()) {
     console.log(chalk.red('❌ VibeLog not initialized. Run `vibe init` first.'));
     process.exit(1);
   }
 
-  const spinner = ora('Generating BUILD_LOG.md...').start();
+  const format = options.format || 'markdown';
+  const template = options.template || 'default';
+  const spinner = ora(`Generating ${format.toUpperCase()} export...`).start();
 
   try {
     const config = loadConfig();
     const logManager = new LogManager();
-    const generator = new ReportGenerator();
+    const exportService = new ExportService();
 
     const logs = logManager.getAllLogs();
-    const checkpoints = logManager.getAllCheckpoints();
 
     if (logs.length === 0) {
       spinner.warn('No logs found.');
@@ -30,6 +38,28 @@ export async function exportCommand(options: { output?: string; name?: string; j
     }
 
     spinner.text = `Analyzing ${logs.length} log entries...`;
+
+    // Use new export service for advanced formats
+    if (format !== 'markdown' || template !== 'default') {
+      spinner.text = `Generating ${template} template in ${format} format...`;
+      const content = await exportService.exportToFormat(format, template, {
+        projectName: options.name,
+        output: options.output,
+      });
+
+      const ext = format === 'html' ? '.html' : format === 'csv' ? '.csv' : format === 'json' ? '.json' : '.md';
+      const outputPath = join(process.cwd(), options.output || `BUILD_LOG${ext}`);
+      writeFileSync(outputPath, content);
+
+      spinner.succeed(`${format.toUpperCase()} export created!`);
+      console.log(chalk.gray(`   File: ${outputPath}`));
+      console.log(chalk.gray(`   Template: ${template}`));
+      return;
+    }
+
+    // Original markdown generation (backward compatibility)
+    const generator = new ReportGenerator();
+    const checkpoints = logManager.getAllCheckpoints();
 
     // AI enhance if available
     let reflection: string | undefined;
